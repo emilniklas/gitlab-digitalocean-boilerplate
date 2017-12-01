@@ -16,7 +16,7 @@
 4. Get the new machine's IP address from [the Digital Ocean GUI](https://cloud.digitalocean.com/droplets).
    Set it to environment variable: `SWARM_MANAGER_IP`
    
-5. Set the CDN of the domainname **myproject.xyz** so that the only records are `A` records `@` and `*` pointing to
+5. Set the DNS of the domainname **myproject.xyz** so that the only records are `A` records `@` and `*` pointing to
    `$SWARM_MANAGER_IP`.
    
 5. "Log in" to the machine:
