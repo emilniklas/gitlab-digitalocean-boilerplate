@@ -1,0 +1,55 @@
+#!/usr/bin/env sh
+
+myproject () {
+  if [ $# -lt 1 ]; then
+    >&2 echo Usage: myproject [command]
+    return 1
+  fi
+
+  export APP_ENV=${APP_ENV:-dev}
+  export PORT=${PORT:-8080}
+  export CI_REGISTRY=${CI_REGISTRY:-local}
+  export CI_PROJECT_NAMESPACE=${CI_PROJECT_NAMESPACE:-myproject}
+  export CI_PROJECT_NAME=${CI_PROJECT_NAME:-myproject}
+  export TAG=${TAG:-latest}
+
+  COMMAND=$1
+  shift
+
+  case $COMMAND in
+    # Add commands here
+    # mycommand)
+    #   echo Hello World
+    #   ;;
+
+    up)
+      myproject docker-compose up "$@"
+      ;;
+
+    down)
+      myproject docker-compose down "$@"
+      ;;
+
+    test)
+      >&2 echo "There are no tests!"
+      ;;
+
+    docker-compose.yml)
+      myproject docker-compose config "$@"
+      ;;
+
+    docker-compose)
+      docker-compose \
+        -f docker-compose.yml \
+        -f docker-compose.$APP_ENV.yml \
+        "$@"
+      ;;
+
+    *)
+      >&2 echo Unknown command: $COMMAND
+      return 1
+      ;;
+  esac
+}
+
+myproject "$@"

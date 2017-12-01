@@ -1,0 +1,51 @@
+image: docker:latest
+
+services:
+  - docker:dind
+
+before_script:
+  - mkdir -p ~/.docker
+  - echo "$TLSCACERT" > ~/.docker/ca.pem
+  - echo "$TLSCERT" > ~/.docker/cert.pem
+  - echo "$TLSKEY" > ~/.docker/key.pem
+  - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  - apk update
+  - apk upgrade
+  - apk add python python-dev py-pip build-base
+  - pip install docker-compose
+
+test:
+  stage: test
+  script:
+    - ./myproject test
+
+build-master:
+  stage: build
+  script:
+    - TAG=latest ./myproject docker-compose build
+    - TAG=latest ./myproject docker-compose push
+  only:
+    - master
+
+build:
+  stage: build
+  script:
+    - TAG=$CI_COMMIT_REF_SLUG ./myproject docker-compose build
+    - TAG=$CI_COMMIT_REF_SLUG ./myproject docker-compose push
+  except:
+    - master
+
+deploy-to-swarm:
+  stage: deploy
+  variables:
+    DOCKER_HOST: tcp://0.0.0.0:2376
+    DOCKER_TLS_VERIFY: 1
+    SERVICE_NAME: myproject
+    APP_ENV: prod
+  script:
+    - ./myproject docker-compose.yml | docker stack deploy --with-registry-auth --compose-file - ${CI_PROJECT_NAMESPACE}-${CI_PROJECT_NAME}-${SERVICE_NAME}
+  environment:
+    name: master
+    url: http://myproject.xyz
+  only:
+    - master
